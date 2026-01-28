@@ -1,8 +1,19 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { ResultCard } from "@/components/ResultCard";
+import { VideoThumbnailGrid } from "@/components/VideoThumbnailGrid";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { 
+  ChannelData,
+  analyzeUploadConsistency,
+  analyzeHookQuality,
+  generateSEODescription,
+  generateTags,
+  generateHashtags,
+} from "@/lib/youtube";
 import { 
   Calendar, 
   Zap, 
@@ -12,26 +23,49 @@ import {
   Settings, 
   Shield,
   Sparkles,
-  ArrowLeft
+  ArrowLeft,
+  Youtube
 } from "lucide-react";
-
-const SAMPLE_SEO_DESCRIPTION = `Learn how to grow your YouTube channel with proven strategies in 2024. This video covers content optimization, audience engagement, and monetization tips that actually work. Perfect for beginner creators looking to take their channel to the next level.`;
-
-const SAMPLE_TAGS = "youtube growth, content creator tips, youtube algorithm, grow youtube channel, youtube monetization, creator economy, video marketing";
-
-const SAMPLE_HASHTAGS = "#YouTubeGrowth #ContentCreator #YouTubeTips #CreatorEconomy #VideoMarketing";
 
 const Results = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const [channelData, setChannelData] = useState<ChannelData | null>(null);
 
-  const handleSignOut = () => {
+  useEffect(() => {
+    // Get channel data from navigation state
+    const state = location.state as { channelData?: ChannelData } | null;
+    if (state?.channelData) {
+      setChannelData(state.channelData);
+    } else {
+      // No data, redirect back
+      navigate("/dashboard");
+    }
+  }, [location.state, navigate]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
     toast({
       title: "Signed out",
       description: "You have been signed out successfully.",
     });
     navigate("/");
   };
+
+  if (!channelData) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-3 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  const uploadConsistency = analyzeUploadConsistency(channelData.videos);
+  const hookQuality = analyzeHookQuality(channelData.videos);
+  const seoDescription = generateSEODescription(channelData.channelName, channelData.videos);
+  const tags = generateTags(channelData.videos);
+  const hashtags = generateHashtags(channelData.videos);
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,13 +81,39 @@ const Results = () => {
             <ArrowLeft className="w-4 h-4" />
             Back to Dashboard
           </button>
-          <h1 className="text-3xl font-semibold text-foreground mb-2">
+          
+          {/* Channel Info Card */}
+          <div className="card-elevated p-6 mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
+                <Youtube className="w-7 h-7 text-destructive" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-semibold text-foreground">
+                  {channelData.channelName}
+                </h1>
+                <a 
+                  href={channelData.channelUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  View Channel →
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <h2 className="text-xl font-semibold text-foreground mb-2">
             Your Channel Analysis
-          </h1>
+          </h2>
           <p className="text-muted-foreground">
-            AI-based guidance to help improve your content performance
+            AI-based guidance from your last {channelData.videos.length} videos
           </p>
         </div>
+
+        {/* Video Thumbnails Proof */}
+        <VideoThumbnailGrid videos={channelData.videos} />
 
         {/* Results Grid */}
         <div className="space-y-4">
@@ -61,16 +121,16 @@ const Results = () => {
           <ResultCard
             icon={Calendar}
             title="Upload Consistency"
-            status="warning"
-            statusText="Gap Detected"
+            status={uploadConsistency.status}
+            statusText={uploadConsistency.status === "success" ? "Consistent" : uploadConsistency.status === "warning" ? "Gap Detected" : "Large Gaps"}
             delay={100}
           >
             <p className="mb-3">
-              We detected irregular upload patterns in your recent content. Consistent uploads help the algorithm recommend your content more frequently.
+              Average gap between uploads: <strong>{uploadConsistency.averageGapDays.toFixed(1)} days</strong>
             </p>
             <div className="bg-secondary/50 rounded-lg p-4 border-l-4 border-primary">
               <p className="font-medium text-foreground">Recommendation</p>
-              <p>Best growth: 1 video/day or 1 video every 2 days for optimal algorithm performance.</p>
+              <p>{uploadConsistency.recommendation}</p>
             </div>
           </ResultCard>
 
@@ -78,16 +138,16 @@ const Results = () => {
           <ResultCard
             icon={Zap}
             title="Hook Quality"
-            status="info"
-            statusText="Average"
+            status={hookQuality.status}
+            statusText={hookQuality.status === "success" ? "Strong" : hookQuality.status === "info" ? "Average" : "Needs Work"}
             delay={200}
           >
             <p className="mb-3">
-              Your first 2–3 seconds decide retention. Strong hooks can increase watch time by up to 40%.
+              {hookQuality.assessment}
             </p>
             <div className="bg-secondary/50 rounded-lg p-4 border-l-4 border-primary">
               <p className="font-medium text-foreground">Sample Hook</p>
-              <p className="italic">"I discovered something that changed everything about my content strategy—and it took me 2 years to figure out..."</p>
+              <p className="italic">"{hookQuality.sampleHook}"</p>
             </div>
           </ResultCard>
 
@@ -124,14 +184,14 @@ const Results = () => {
           <ResultCard
             icon={Search}
             title="SEO & Search Optimization"
-            copyable={SAMPLE_SEO_DESCRIPTION}
+            copyable={seoDescription}
             delay={400}
           >
             <p className="mb-3">
-              AI-generated description optimized for search visibility. Uses keywords based on common Google search questions.
+              AI-generated description optimized for search visibility based on your channel content.
             </p>
             <div className="bg-secondary/50 rounded-lg p-4 font-mono text-xs">
-              {SAMPLE_SEO_DESCRIPTION}
+              {seoDescription}
             </div>
           </ResultCard>
 
@@ -143,14 +203,15 @@ const Results = () => {
           >
             <div className="space-y-4">
               <div>
-                <p className="font-medium text-foreground mb-2">YouTube Tags</p>
+                <p className="font-medium text-foreground mb-2">YouTube Tags (based on your content)</p>
                 <div className="bg-secondary/50 rounded-lg p-3 font-mono text-xs flex items-center justify-between gap-2">
-                  <span className="truncate">{SAMPLE_TAGS}</span>
+                  <span className="truncate">{tags}</span>
                   <Button 
                     variant="ghost" 
                     size="sm"
                     onClick={() => {
-                      navigator.clipboard.writeText(SAMPLE_TAGS);
+                      navigator.clipboard.writeText(tags);
+                      toast({ title: "Copied!", description: "Tags copied to clipboard" });
                     }}
                   >
                     Copy
@@ -160,12 +221,13 @@ const Results = () => {
               <div>
                 <p className="font-medium text-foreground mb-2">Shorts / Reels Hashtags</p>
                 <div className="bg-secondary/50 rounded-lg p-3 font-mono text-xs flex items-center justify-between gap-2">
-                  <span>{SAMPLE_HASHTAGS}</span>
+                  <span>{hashtags}</span>
                   <Button 
                     variant="ghost" 
                     size="sm"
                     onClick={() => {
-                      navigator.clipboard.writeText(SAMPLE_HASHTAGS);
+                      navigator.clipboard.writeText(hashtags);
+                      toast({ title: "Copied!", description: "Hashtags copied to clipboard" });
                     }}
                   >
                     Copy

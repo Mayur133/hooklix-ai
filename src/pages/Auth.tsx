@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -15,39 +16,73 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  useEffect(() => {
+    // Check if user is already logged in
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate("/dashboard");
+      }
+    };
+    checkUser();
+  }, [navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate auth delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    if (email && password) {
-      toast({
-        title: isLogin ? "Welcome back!" : "Account created!",
-        description: "Redirecting to your dashboard...",
-      });
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+        toast({
+          title: "Welcome back!",
+          description: "Redirecting to your dashboard...",
+        });
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+        if (error) throw error;
+        toast({
+          title: "Account created!",
+          description: "Redirecting to your dashboard...",
+        });
+      }
       navigate("/dashboard");
-    } else {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Please fill in all fields",
+        description: error.message || "Authentication failed",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    toast({
-      title: "Welcome!",
-      description: "Signed in with Google successfully",
-    });
-    navigate("/dashboard");
-    setIsLoading(false);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Google sign in failed",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -99,6 +134,7 @@ const Auth = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="input-field"
                   required
+                  minLength={6}
                 />
               </div>
 
