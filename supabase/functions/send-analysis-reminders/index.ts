@@ -15,6 +15,21 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    
+    if (!resendApiKey) {
+      console.log("RESEND_API_KEY not configured, skipping email sending");
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Email notifications disabled (no RESEND_API_KEY)",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -43,6 +58,7 @@ Deno.serve(async (req) => {
     console.log(`Found ${eligibleUsers?.length || 0} eligible users for notification`);
 
     const notifiedUsers: string[] = [];
+    const errors: string[] = [];
 
     for (const userPref of eligibleUsers || []) {
       // Check if user has done any analysis
@@ -73,33 +89,87 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // In a real implementation, you would send an email here
-      // For now, we just log and update the last_notification_sent
-      console.log(`Would send email to ${userEmail}:`, {
-        subject: "Time to re-analyze your channel!",
-        channelName: lastAnalysis.channel_name,
-        lastAnalyzed: lastAnalysis.created_at,
-      });
+      try {
+        // Send email using Resend API directly
+        const emailResponse = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: "Creators Analytics AI <onboarding@resend.dev>",
+            to: [userEmail],
+            subject: "Time to re-analyze your channel! 📊",
+            html: `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              </head>
+              <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb; padding: 40px 20px;">
+                <div style="max-width: 500px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                  <div style="background: linear-gradient(135deg, #9333ea 0%, #ef4444 50%, #f59e0b 100%); padding: 30px; text-align: center;">
+                    <h1 style="color: white; margin: 0; font-size: 24px;">Creators Analytics AI</h1>
+                  </div>
+                  <div style="padding: 30px;">
+                    <h2 style="color: #1f2937; margin: 0 0 16px;">It's time for a channel check-up! 🔍</h2>
+                    <p style="color: #6b7280; line-height: 1.6; margin: 0 0 16px;">
+                      Hey there! It's been 7 days since your last analysis${lastAnalysis.channel_name ? ` of <strong>${lastAnalysis.channel_name}</strong>` : ''}.
+                    </p>
+                    <p style="color: #6b7280; line-height: 1.6; margin: 0 0 24px;">
+                      Re-analyzing your channel regularly helps you track progress, spot new opportunities, and stay on top of your growth strategy.
+                    </p>
+                    <a href="https://creatorsanalyticsai.lovable.app/select" style="display: inline-block; background: linear-gradient(135deg, #9333ea 0%, #ef4444 100%); color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600;">
+                      Analyze Now →
+                    </a>
+                  </div>
+                  <div style="padding: 20px 30px; background: #f9fafb; border-top: 1px solid #e5e7eb;">
+                    <p style="color: #9ca3af; font-size: 12px; margin: 0; text-align: center;">
+                      You're receiving this because you enabled email notifications.<br>
+                      <a href="https://creatorsanalyticsai.lovable.app/settings" style="color: #9333ea;">Manage preferences</a>
+                    </p>
+                  </div>
+                </div>
+              </body>
+              </html>
+            `,
+          }),
+        });
 
-      // Update last_notification_sent
-      const { error: updateError } = await supabase
-        .from("user_preferences")
-        .update({ last_notification_sent: new Date().toISOString() })
-        .eq("user_id", userPref.user_id);
+        if (!emailResponse.ok) {
+          const errorData = await emailResponse.json();
+          throw new Error(errorData.message || "Failed to send email");
+        }
 
-      if (updateError) {
-        console.error(`Error updating notification time for user ${userPref.user_id}:`, updateError);
-        continue;
+        const emailResult = await emailResponse.json();
+        console.log(`Email sent to ${userEmail}:`, emailResult);
+
+        // Update last_notification_sent
+        const { error: updateError } = await supabase
+          .from("user_preferences")
+          .update({ last_notification_sent: new Date().toISOString() })
+          .eq("user_id", userPref.user_id);
+
+        if (updateError) {
+          console.error(`Error updating notification time for user ${userPref.user_id}:`, updateError);
+          continue;
+        }
+
+        notifiedUsers.push(userPref.user_id);
+      } catch (emailError: any) {
+        console.error(`Failed to send email to ${userEmail}:`, emailError);
+        errors.push(`${userEmail}: ${emailError.message}`);
       }
-
-      notifiedUsers.push(userPref.user_id);
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Processed ${notifiedUsers.length} users for notification`,
+        message: `Sent ${notifiedUsers.length} email notifications`,
         notifiedUsers,
+        errors: errors.length > 0 ? errors : undefined,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

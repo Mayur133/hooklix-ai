@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AnalysisStep } from "@/components/AnalysisStep";
+import { TrustDisclaimer } from "@/components/TrustDisclaimer";
 import { useToast } from "@/hooks/use-toast";
 import { Instagram, ArrowRight, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -119,10 +121,10 @@ const InstagramAnalysis = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar showUserMenu onSignOut={handleSignOut} userEmail={user?.email} />
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="flex-1 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {!isAnalyzing ? (
           <div className="animate-fade-in">
             {/* Back Button */}
@@ -179,36 +181,31 @@ const InstagramAnalysis = () => {
               </p>
             </div>
 
-            {/* Trust Notice */}
-            <div className="card-soft p-4 mb-8 border-l-4 border-pink-500">
-              <p className="text-sm text-muted-foreground">
-                <strong className="text-foreground">Privacy Notice:</strong> We do not access private Instagram data. 
-                Analysis is based on public content examples and platform behavior patterns.
-              </p>
-            </div>
+            {/* Trust Disclaimer */}
+            <TrustDisclaimer variant="instagram" />
 
             {/* What You'll Get */}
-            <div className="card-soft p-6">
+            <div className="card-soft p-6 mt-6">
               <h3 className="font-semibold text-foreground mb-4">Instagram Growth Insights</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-pink-500" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                   Hook Effectiveness Analysis (First 3 Seconds)
                 </li>
                 <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-pink-500" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                   Visual Pacing Evaluation
                 </li>
                 <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-pink-500" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                   Caption Opening Structure Review
                 </li>
                 <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-pink-500" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                   CTA Placement Guidance
                 </li>
                 <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-pink-500" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                   Algorithm Behavior Insights
                 </li>
               </ul>
@@ -244,6 +241,8 @@ const InstagramAnalysis = () => {
           </div>
         )}
       </main>
+
+      <Footer />
     </div>
   );
 };

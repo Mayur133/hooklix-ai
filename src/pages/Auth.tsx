@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { AuthSuccessAnimation } from "@/components/AuthSuccessAnimation";
 
 const Auth = () => {
@@ -86,11 +87,8 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth`,
-        },
+      const { error } = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
       });
       if (error) throw error;
     } catch (error: any) {
@@ -110,7 +108,7 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Subtle gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-trust-blue-light/30 via-background to-secondary/20 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/20 pointer-events-none" />
       
       <div className="relative flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md animate-fade-in">
