@@ -12,6 +12,10 @@ import {
   Video,
   Instagram,
   ArrowLeftRight,
+  Info,
+  FileText,
+  Shield,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -43,15 +47,17 @@ export const MobileMenu = ({ isOpen, onClose, isPremium = false }: MobileMenuPro
       label: "Your Account",
       items: [
         { icon: History, label: "Analysis History", path: "/history", premium: true },
-        { icon: Bell, label: "Email Notifications", path: "/settings" },
+        { icon: Settings, label: "Settings", path: "/settings" },
         { icon: Crown, label: "Upgrade to Premium", path: "/upgrade", highlight: true },
       ],
     },
     {
-      label: "Support",
+      label: "Support & Legal",
       items: [
-        { icon: HelpCircle, label: "Help & FAQ", path: "/help" },
-        { icon: Settings, label: "Settings", path: "/settings" },
+        { icon: Info, label: "About", path: "/about" },
+        { icon: Shield, label: "Privacy Policy", path: "/privacy" },
+        { icon: FileText, label: "Terms of Service", path: "/terms" },
+        { icon: Mail, label: "Contact", path: "/contact" },
       ],
     },
   ];
@@ -130,6 +136,13 @@ export const MobileMenu = ({ isOpen, onClose, isPremium = false }: MobileMenuPro
               </div>
             </div>
           ))}
+
+          {/* Support Email */}
+          <div className="pt-4 border-t border-border">
+            <p className="text-xs text-muted-foreground text-center">
+              Support: <a href="mailto:creatorsAnalyticsAi@gmail.com" className="text-primary hover:underline">creatorsAnalyticsAi@gmail.com</a>
+            </p>
+          </div>
         </div>
       </div>
     </>

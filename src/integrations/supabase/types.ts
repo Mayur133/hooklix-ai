@@ -89,6 +89,7 @@ export type Database = {
           email_notifications: boolean | null
           id: string
           last_notification_sent: string | null
+          last_video_analysis: string | null
           updated_at: string
           user_id: string
         }
@@ -97,6 +98,7 @@ export type Database = {
           email_notifications?: boolean | null
           id?: string
           last_notification_sent?: string | null
+          last_video_analysis?: string | null
           updated_at?: string
           user_id: string
         }
@@ -105,6 +107,7 @@ export type Database = {
           email_notifications?: boolean | null
           id?: string
           last_notification_sent?: string | null
+          last_video_analysis?: string | null
           updated_at?: string
           user_id?: string
         }

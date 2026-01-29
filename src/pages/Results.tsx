@@ -1,9 +1,11 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 import { ResultCard } from "@/components/ResultCard";
 import { VideoThumbnailGrid } from "@/components/VideoThumbnailGrid";
 import { PremiumFeaturesSection } from "@/components/PremiumFeaturesSection";
+import { TrustDisclaimer } from "@/components/TrustDisclaimer";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,10 +71,10 @@ const Results = () => {
   const hashtags = generateHashtags(channelData.videos);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar showUserMenu onSignOut={handleSignOut} />
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="flex-1 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8 animate-fade-in">
           <button 
@@ -282,6 +284,11 @@ const Results = () => {
           </ResultCard>
         </div>
 
+        {/* Trust Disclaimer */}
+        <div className="mt-6">
+          <TrustDisclaimer />
+        </div>
+
         {/* Premium Features Section */}
         <PremiumFeaturesSection />
 
@@ -301,6 +308,8 @@ const Results = () => {
           </Button>
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 };

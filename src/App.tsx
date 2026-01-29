@@ -14,6 +14,11 @@ import InstagramAnalysis from "./pages/InstagramAnalysis";
 import InstagramResults from "./pages/InstagramResults";
 import ChannelComparison from "./pages/ChannelComparison";
 import AnalysisHistory from "./pages/AnalysisHistory";
+import Settings from "./pages/Settings";
+import About from "./pages/About";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +41,11 @@ const App = () => (
           <Route path="/instagram-results" element={<InstagramResults />} />
           <Route path="/channel-comparison" element={<ChannelComparison />} />
           <Route path="/history" element={<AnalysisHistory />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/contact" element={<Contact />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

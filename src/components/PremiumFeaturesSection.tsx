@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Crown, ChevronDown, ChevronUp, Lock } from "lucide-react";
+import { Crown, ChevronDown, ChevronUp, Lock, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PremiumFeature {
@@ -7,7 +7,8 @@ interface PremiumFeature {
   description: string;
 }
 
-const topPremiumFeatures: PremiumFeature[] = [
+// Features that are now FREE
+const freeAnalysisFeatures: PremiumFeature[] = [
   {
     title: "Intro Weakness Detector",
     description: "Detects first-10-second hook problems and suggests stronger opening structures.",
@@ -16,6 +17,9 @@ const topPremiumFeatures: PremiumFeature[] = [
     title: "Title Tone Advisor",
     description: "Analyzes emotional vs informational balance and suggests better title intent.",
   },
+];
+
+const topPremiumFeatures: PremiumFeature[] = [
   {
     title: "Thumbnail–Title Sync Warning",
     description: "Identifies mismatch between thumbnail promise and title wording.",
@@ -66,6 +70,40 @@ export const PremiumFeaturesSection = () => {
 
   return (
     <div className="mt-8 animate-fade-in" style={{ animationDelay: '600ms' }}>
+      {/* FREE Features Header */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/20 border border-green-500/30">
+          <Sparkles className="w-4 h-4 text-green-600" />
+          <span className="text-sm font-medium text-green-600">Free Features</span>
+        </div>
+        <div className="flex-1 h-px bg-border" />
+      </div>
+
+      {/* FREE Features Grid */}
+      <div className="card-elevated p-6 mb-6">
+        <div className="space-y-4">
+          {freeAnalysisFeatures.map((feature, index) => (
+            <div 
+              key={index}
+              className="group relative p-4 rounded-xl border border-green-500/30 bg-gradient-to-br from-green-500/5 to-emerald-500/5"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-4 h-4 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-foreground mb-1">{feature.title}</h4>
+                  <p className="text-sm text-muted-foreground">{feature.description}</p>
+                </div>
+                <span className="text-xs font-medium text-green-600 bg-green-500/10 px-2 py-1 rounded-full">
+                  FREE
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Premium Header */}
       <div className="flex items-center gap-3 mb-4">
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/30">
@@ -78,7 +116,7 @@ export const PremiumFeaturesSection = () => {
       {/* Premium Features Grid */}
       <div className="card-elevated p-6">
         <div className="space-y-4">
-          {/* Top 5 Features - Always Visible */}
+          {/* Top Premium Features - Always Visible */}
           {topPremiumFeatures.map((feature, index) => (
             <div 
               key={index}
