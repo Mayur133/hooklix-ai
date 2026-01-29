@@ -1,0 +1,279 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Navbar } from "@/components/Navbar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchChannelData } from "@/lib/youtube";
+import { 
+  ArrowLeft, 
+  ArrowRight, 
+  Crown, 
+  Lock,
+  Youtube,
+  ArrowLeftRight,
+} from "lucide-react";
+
+const ChannelComparison = () => {
+  const [channel1Url, setChannel1Url] = useState("");
+  const [channel2Url, setChannel2Url] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [isPremium, setIsPremium] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+      setUser(session.user);
+
+      // Check premium status
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_premium, premium_until")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+      if (profile) {
+        const isCurrentlyPremium = profile.is_premium && 
+          (!profile.premium_until || new Date(profile.premium_until) > new Date());
+        setIsPremium(isCurrentlyPremium);
+      }
+    };
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session) {
+        navigate("/auth");
+      } else {
+        setUser(session.user);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const handleCompare = async () => {
+    if (!isPremium) {
+      toast({
+        title: "Premium Feature",
+        description: "Upgrade to access Channel Comparison.",
+      });
+      return;
+    }
+
+    if (!channel1Url.trim() || !channel2Url.trim()) {
+      toast({
+        title: "Please enter both channel URLs",
+        description: "Paste two YouTube channel links to compare.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
+
+    try {
+      const [channel1Data, channel2Data] = await Promise.all([
+        fetchChannelData(channel1Url),
+        fetchChannelData(channel2Url),
+      ]);
+
+      // Save to history
+      if (user) {
+        await supabase.from("analysis_history").insert([{
+          user_id: user.id,
+          platform: "youtube" as const,
+          analysis_type: "comparison" as const,
+          channel_name: `${channel1Data.channelName} vs ${channel2Data.channelName}`,
+          video_count: channel1Data.videos.length + channel2Data.videos.length,
+          analysis_data: JSON.parse(JSON.stringify({
+            channel1: channel1Data,
+            channel2: channel2Data,
+          })),
+        }]);
+      }
+
+      navigate("/comparison-results", { 
+        state: { 
+          channel1Data, 
+          channel2Data 
+        } 
+      });
+    } catch (error: any) {
+      setIsAnalyzing(false);
+      toast({
+        title: "Comparison failed",
+        description: error.message || "Could not compare channels. Please check the URLs and try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: "Signed out",
+      description: "You have been signed out successfully.",
+    });
+    navigate("/");
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar showUserMenu onSignOut={handleSignOut} userEmail={user?.email} />
+
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="animate-fade-in">
+          {/* Back Button */}
+          <button 
+            onClick={() => navigate("/select")}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Selection
+          </button>
+
+          {/* Premium Badge */}
+          <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white text-sm font-medium">
+              <Crown className="w-4 h-4" />
+              PREMIUM FEATURE
+            </div>
+          </div>
+
+          {/* Hero Section */}
+          <div className="text-center mb-12">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center mx-auto mb-6">
+              <ArrowLeftRight className="w-8 h-8 text-amber-600" />
+            </div>
+            <h1 className="text-3xl md:text-4xl font-semibold text-foreground mb-4">
+              Channel Comparison
+            </h1>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              Compare two channels side-by-side to identify competitive advantages and growth opportunities.
+            </p>
+          </div>
+
+          {/* Input Card */}
+          <div className="card-elevated p-8 mb-8">
+            {!isPremium && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-2xl backdrop-blur-sm z-10">
+                <div className="text-center p-6">
+                  <Lock className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">Premium Feature</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Upgrade to compare channels and discover competitive insights.
+                  </p>
+                  <Button variant="trust" size="lg">
+                    Upgrade to Premium
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-6">
+              {/* Channel 1 */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-3">
+                  First Channel
+                </label>
+                <div className="relative">
+                  <Youtube className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type="url"
+                    placeholder="https://youtube.com/@channel1"
+                    value={channel1Url}
+                    onChange={(e) => setChannel1Url(e.target.value)}
+                    className="input-field pl-12 h-12"
+                    disabled={!isPremium}
+                  />
+                </div>
+              </div>
+
+              {/* VS Divider */}
+              <div className="flex items-center gap-4">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-sm font-medium text-muted-foreground">VS</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+
+              {/* Channel 2 */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-3">
+                  Second Channel
+                </label>
+                <div className="relative">
+                  <Youtube className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type="url"
+                    placeholder="https://youtube.com/@channel2"
+                    value={channel2Url}
+                    onChange={(e) => setChannel2Url(e.target.value)}
+                    className="input-field pl-12 h-12"
+                    disabled={!isPremium}
+                  />
+                </div>
+              </div>
+
+              <Button 
+                variant="trust" 
+                size="lg" 
+                onClick={handleCompare}
+                className="w-full gap-2"
+                disabled={isAnalyzing || !isPremium}
+              >
+                {isAnalyzing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Comparing...
+                  </>
+                ) : (
+                  <>
+                    Compare Channels
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* What You'll Get */}
+          <div className="card-soft p-6">
+            <h3 className="font-semibold text-foreground mb-4">Comparison Insights</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                Upload frequency comparison
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                Title and hook strategy differences
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                Content format analysis
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                Competitive advantage identification
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                Growth opportunity recommendations
+              </li>
+            </ul>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default ChannelComparison;

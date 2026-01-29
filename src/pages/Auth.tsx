@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -7,12 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthSuccessAnimation } from "@/components/AuthSuccessAnimation";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showAnimation, setShowAnimation] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -21,10 +23,23 @@ const Auth = () => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/dashboard");
+        setShowAnimation(true);
       }
     };
     checkUser();
+
+    // Listen for auth changes (for OAuth redirects)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        setShowAnimation(true);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleAnimationComplete = useCallback(() => {
+    navigate("/select");
   }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,27 +55,30 @@ const Auth = () => {
         if (error) throw error;
         toast({
           title: "Welcome back!",
-          description: "Redirecting to your dashboard...",
+          description: "Preparing your dashboard...",
         });
+        setShowAnimation(true);
       } else {
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/select`,
+          },
         });
         if (error) throw error;
         toast({
           title: "Account created!",
-          description: "Redirecting to your dashboard...",
+          description: "Preparing your dashboard...",
         });
+        setShowAnimation(true);
       }
-      navigate("/dashboard");
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Authentication failed",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -71,7 +89,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}/auth`,
         },
       });
       if (error) throw error;
@@ -84,6 +102,10 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
+
+  if (showAnimation) {
+    return <AuthSuccessAnimation onComplete={handleAnimationComplete} />;
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

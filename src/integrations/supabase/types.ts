@@ -14,7 +14,102 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      analysis_history: {
+        Row: {
+          analysis_data: Json | null
+          analysis_type: string
+          channel_id: string | null
+          channel_name: string | null
+          channel_url: string | null
+          created_at: string
+          id: string
+          platform: string
+          user_id: string
+          video_count: number | null
+        }
+        Insert: {
+          analysis_data?: Json | null
+          analysis_type: string
+          channel_id?: string | null
+          channel_name?: string | null
+          channel_url?: string | null
+          created_at?: string
+          id?: string
+          platform: string
+          user_id: string
+          video_count?: number | null
+        }
+        Update: {
+          analysis_data?: Json | null
+          analysis_type?: string
+          channel_id?: string | null
+          channel_name?: string | null
+          channel_url?: string | null
+          created_at?: string
+          id?: string
+          platform?: string
+          user_id?: string
+          video_count?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          is_premium: boolean | null
+          premium_until: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_premium?: boolean | null
+          premium_until?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_premium?: boolean | null
+          premium_until?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          created_at: string
+          email_notifications: boolean | null
+          id: string
+          last_notification_sent: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_notifications?: boolean | null
+          id?: string
+          last_notification_sent?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_notifications?: boolean | null
+          id?: string
+          last_notification_sent?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
