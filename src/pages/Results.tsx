@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { ResultCard } from "@/components/ResultCard";
 import { VideoThumbnailGrid } from "@/components/VideoThumbnailGrid";
+import { PremiumFeaturesSection } from "@/components/PremiumFeaturesSection";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -280,6 +281,9 @@ const Results = () => {
             </p>
           </ResultCard>
         </div>
+
+        {/* Premium Features Section */}
+        <PremiumFeaturesSection />
 
         {/* Upgrade CTA */}
         <div className="mt-12 card-elevated p-8 text-center animate-slide-up opacity-0" style={{ animationDelay: '800ms', animationFillMode: 'forwards' }}>

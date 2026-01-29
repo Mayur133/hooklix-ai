@@ -5,21 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AnalysisStep } from "@/components/AnalysisStep";
 import { useToast } from "@/hooks/use-toast";
-import { Search, ArrowRight, ArrowLeft } from "lucide-react";
+import { Instagram, ArrowRight, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchChannelData, ChannelData } from "@/lib/youtube";
 
 const ANALYSIS_STEPS = [
-  "AI Team is analyzing your channel…",
-  "Checking your last 10 videos…",
-  "Analyzing upload consistency…",
-  "Evaluating hooks and engagement…",
-  "Reviewing tags, hashtags, and SEO…",
-  "Checking monetization-safe settings…",
+  "AI Team is analyzing your content…",
+  "Checking post/reel metadata…",
+  "Analyzing hook effectiveness…",
+  "Evaluating visual pacing…",
+  "Reviewing caption structure…",
+  "Generating algorithm insights…",
 ];
 
-const Dashboard = () => {
-  const [channelUrl, setChannelUrl] = useState("");
+const InstagramAnalysis = () => {
+  const [postUrl, setPostUrl] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState(-1);
   const [user, setUser] = useState<any>(null);
@@ -49,10 +48,20 @@ const Dashboard = () => {
   }, [navigate]);
 
   const handleAnalyze = async () => {
-    if (!channelUrl.trim()) {
+    if (!postUrl.trim()) {
       toast({
-        title: "Please enter a channel URL",
-        description: "Paste your YouTube channel link, @username, or video URL to begin analysis.",
+        title: "Please enter a post URL",
+        description: "Paste your Instagram post or reel link to begin analysis.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate Instagram URL
+    if (!postUrl.includes("instagram.com")) {
+      toast({
+        title: "Invalid URL",
+        description: "Please enter a valid Instagram post or reel URL.",
         variant: "destructive",
       });
       return;
@@ -62,50 +71,39 @@ const Dashboard = () => {
     setCurrentStep(0);
 
     try {
-      // Start step animation while fetching
-      const stepInterval = setInterval(() => {
-        setCurrentStep(prev => {
-          if (prev < ANALYSIS_STEPS.length - 1) return prev + 1;
-          return prev;
-        });
-      }, 1200);
-
-      // Fetch real channel data
-      const channelData = await fetchChannelData(channelUrl);
-      
-      clearInterval(stepInterval);
-      
-      // Complete remaining steps quickly
-      for (let i = currentStep; i < ANALYSIS_STEPS.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 300));
+      // Animate through steps
+      for (let i = 0; i < ANALYSIS_STEPS.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 800));
         setCurrentStep(i + 1);
       }
+
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Save to history
       if (user) {
         await supabase.from("analysis_history").insert([{
           user_id: user.id,
-          platform: "youtube" as const,
-          analysis_type: "channel" as const,
-          channel_name: channelData.channelName,
-          channel_url: channelData.channelUrl,
-          channel_id: channelData.channelId,
-          video_count: channelData.videos.length,
-          analysis_data: JSON.parse(JSON.stringify(channelData)),
+          platform: "instagram" as const,
+          analysis_type: "video" as const,
+          channel_url: postUrl,
+          video_count: 1,
+          analysis_data: JSON.parse(JSON.stringify({
+            url: postUrl,
+          })),
         }]);
       }
 
-      // Short delay before navigating
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      
-      // Navigate with channel data
-      navigate("/results", { state: { channelData } });
+      navigate("/instagram-results", { 
+        state: { 
+          postUrl,
+        } 
+      });
     } catch (error: any) {
       setIsAnalyzing(false);
       setCurrentStep(-1);
       toast({
         title: "Analysis failed",
-        description: error.message || "Could not analyze the channel. Please check the URL and try again.",
+        description: error.message || "Could not analyze the post. Please try again.",
         variant: "destructive",
       });
     }
@@ -138,27 +136,30 @@ const Dashboard = () => {
 
             {/* Hero Section */}
             <div className="text-center mb-12">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center mx-auto mb-6">
+                <Instagram className="w-8 h-8 text-pink-600" />
+              </div>
               <h1 className="text-3xl md:text-4xl font-semibold text-foreground mb-4">
-                We are analyzing your channel with AI
+                Instagram Growth Analysis
               </h1>
               <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-                Our AI system checks your recent videos, upload behavior, and content structure to identify growth opportunities.
+                Practical Instagram growth guidance based on real content examples and algorithm behavior.
               </p>
             </div>
 
             {/* Input Card */}
             <div className="card-elevated p-8 mb-8">
               <label className="block text-sm font-medium text-foreground mb-3">
-                Paste your YouTube channel link, @username, or video URL
+                Paste your Instagram post or reel URL
               </label>
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Instagram className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     type="url"
-                    placeholder="https://youtube.com/@yourchannel"
-                    value={channelUrl}
-                    onChange={(e) => setChannelUrl(e.target.value)}
+                    placeholder="https://instagram.com/p/... or /reel/..."
+                    value={postUrl}
+                    onChange={(e) => setPostUrl(e.target.value)}
                     className="input-field pl-12 h-12"
                     onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
                   />
@@ -169,43 +170,62 @@ const Dashboard = () => {
                   onClick={handleAnalyze}
                   className="gap-2 whitespace-nowrap"
                 >
-                  Analyze Channel
+                  Analyze Post
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-3">
-                Examples: youtube.com/@MrBeast, youtube.com/channel/UC..., or any video URL
+                Supports: instagram.com/p/, instagram.com/reel/, and instagram.com/tv/ links
               </p>
             </div>
 
-            {/* Trust Indicators */}
-            <div className="grid grid-cols-3 gap-6 text-center">
-              <div className="card-soft p-4">
-                <div className="text-2xl font-semibold text-foreground mb-1">10K+</div>
-                <div className="text-sm text-muted-foreground">Channels Analyzed</div>
-              </div>
-              <div className="card-soft p-4">
-                <div className="text-2xl font-semibold text-foreground mb-1">AI-Powered</div>
-                <div className="text-sm text-muted-foreground">Smart Analysis</div>
-              </div>
-              <div className="card-soft p-4">
-                <div className="text-2xl font-semibold text-foreground mb-1">Free</div>
-                <div className="text-sm text-muted-foreground">Basic Insights</div>
-              </div>
+            {/* Trust Notice */}
+            <div className="card-soft p-4 mb-8 border-l-4 border-pink-500">
+              <p className="text-sm text-muted-foreground">
+                <strong className="text-foreground">Privacy Notice:</strong> We do not access private Instagram data. 
+                Analysis is based on public content examples and platform behavior patterns.
+              </p>
+            </div>
+
+            {/* What You'll Get */}
+            <div className="card-soft p-6">
+              <h3 className="font-semibold text-foreground mb-4">Instagram Growth Insights</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-pink-500" />
+                  Hook Effectiveness Analysis (First 3 Seconds)
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-pink-500" />
+                  Visual Pacing Evaluation
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-pink-500" />
+                  Caption Opening Structure Review
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-pink-500" />
+                  CTA Placement Guidance
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-pink-500" />
+                  Algorithm Behavior Insights
+                </li>
+              </ul>
             </div>
           </div>
         ) : (
           <div className="animate-fade-in">
             {/* Analysis Progress */}
             <div className="text-center mb-12">
-              <div className="w-16 h-16 rounded-2xl bg-trust-blue-light flex items-center justify-center mx-auto mb-6">
-                <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center mx-auto mb-6">
+                <div className="w-8 h-8 border-3 border-pink-600 border-t-transparent rounded-full animate-spin" />
               </div>
               <h2 className="text-2xl font-semibold text-foreground mb-2">
-                Analyzing your channel...
+                Analyzing your content...
               </h2>
               <p className="text-muted-foreground">
-                Fetching real data from YouTube
+                Generating algorithm-based insights
               </p>
             </div>
 
@@ -228,4 +248,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default InstagramAnalysis;
