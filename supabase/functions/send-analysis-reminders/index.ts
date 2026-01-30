@@ -13,6 +13,28 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Verify CRON_SECRET for authentication
+    const authHeader = req.headers.get("Authorization");
+    const expectedToken = Deno.env.get("CRON_SECRET");
+    
+    if (!expectedToken) {
+      console.error("CRON_SECRET not configured");
+      return new Response(
+        JSON.stringify({ success: false, error: "Server misconfiguration" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
+    
+    if (authHeader !== `Bearer ${expectedToken}`) {
+      console.log("Unauthorized request - invalid or missing CRON_SECRET");
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+    
+    console.log("Authorized cron request received");
+    
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
