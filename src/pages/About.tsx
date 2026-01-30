@@ -25,11 +25,11 @@ const About = () => {
             Back
           </button>
 
-          <h1 className="text-3xl font-bold text-foreground mb-6">About Creators Analytics AI</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-6">About Hooklix Ai</h1>
 
           <div className="prose prose-gray dark:prose-invert max-w-none">
             <p className="text-lg text-muted-foreground mb-8">
-              Creators Analytics AI is a professional AI-powered tool designed to help content creators 
+              Hooklix Ai is a professional AI-powered tool designed to help content creators 
               understand and improve their YouTube and Instagram content performance using data-driven insights.
             </p>
 

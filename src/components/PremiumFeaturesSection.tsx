@@ -109,6 +109,7 @@ export const PremiumFeaturesSection = () => {
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/30">
           <Crown className="w-4 h-4 text-amber-500" />
           <span className="text-sm font-medium text-amber-600">Premium Features</span>
+          <span className="text-xs font-medium text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full ml-1">Coming Soon</span>
         </div>
         <div className="flex-1 h-px bg-border" />
       </div>

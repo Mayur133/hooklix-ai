@@ -47,7 +47,7 @@ export const Footer = () => {
 
         {/* Copyright */}
         <div className="mt-4 pt-4 border-t border-border/50 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Creators Analytics AI. All rights reserved.
+          © {new Date().getFullYear()} Hooklix Ai. All rights reserved.
         </div>
       </div>
     </footer>
