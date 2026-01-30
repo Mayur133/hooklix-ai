@@ -84,10 +84,10 @@ const About = () => {
               <p className="text-sm text-muted-foreground">
                 Have questions or feedback? Reach out to us at{" "}
                 <a 
-                  href="mailto:creatorsAnalyticsAi@gmail.com" 
+                  href="mailto:hooklixai@gmail.com" 
                   className="text-primary hover:underline"
                 >
-                  creatorsAnalyticsAi@gmail.com
+                  hooklixai@gmail.com
                 </a>
               </p>
             </div>

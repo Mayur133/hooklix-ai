@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Youtube, Video, Instagram, Crown, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ComingSoonModal } from "@/components/ComingSoonModal";
 
 interface AnalysisOption {
   id: string;
@@ -55,6 +56,8 @@ const analysisOptions: AnalysisOption[] = [
 const AnalysisSelector = () => {
   const [user, setUser] = useState<any>(null);
   const [isPremium, setIsPremium] = useState(false);
+  const [showComingSoon, setShowComingSoon] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -104,10 +107,12 @@ const AnalysisSelector = () => {
 
   const handleOptionClick = (option: AnalysisOption) => {
     if (option.isPremium && !isPremium) {
-      toast({
-        title: "Premium Feature",
-        description: "Upgrade to access Channel Comparison and other premium features.",
-      });
+      // Show loading state for 2 seconds, then show modal
+      setPendingNavigation(option.route);
+      setTimeout(() => {
+        setPendingNavigation(null);
+        setShowComingSoon(true);
+      }, 2000);
       return;
     }
     navigate(option.route);
@@ -120,48 +125,59 @@ const AnalysisSelector = () => {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="animate-fade-in">
           {/* Header */}
-          <div className="text-center mb-12">
+          <header className="text-center mb-12">
             <h1 className="text-3xl md:text-4xl font-semibold text-foreground mb-4">
               Choose what you want to analyze
             </h1>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
               Select an analysis type to get AI-powered insights for your content
             </p>
-          </div>
+          </header>
 
           {/* Options Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-6" aria-label="Analysis options">
             {analysisOptions.map((option, index) => {
               const Icon = option.icon;
               const isLocked = option.isPremium && !isPremium;
+              const isLoading = pendingNavigation === option.route;
 
               return (
                 <button
                   key={option.id}
                   onClick={() => handleOptionClick(option)}
+                  disabled={isLoading}
                   className={cn(
                     "relative group text-left p-6 rounded-2xl border border-border transition-all duration-300",
                     "hover:border-primary/30 hover:shadow-lg hover:-translate-y-1",
                     `bg-gradient-to-br ${option.gradient}`,
-                    isLocked && "opacity-80"
+                    isLocked && "opacity-80",
+                    isLoading && "cursor-wait"
                   )}
                   style={{ animationDelay: `${index * 100}ms` }}
+                  aria-label={option.title}
                 >
                   {/* Premium Badge */}
                   {option.isPremium && (
                     <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white text-xs font-medium">
                       <Crown className="w-3 h-3" />
-                      PREMIUM
+                      COMING SOON
                     </div>
                   )}
 
-                  {/* Lock Overlay */}
+                  {/* Lock/Loading Overlay */}
                   {isLocked && (
                     <div className="absolute inset-0 flex items-center justify-center bg-background/50 rounded-2xl backdrop-blur-[1px]">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Lock className="w-5 h-5" />
-                        <span className="font-medium">Upgrade to unlock</span>
-                      </div>
+                      {isLoading ? (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                          <span className="font-medium">Loading...</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Lock className="w-5 h-5" />
+                          <span className="font-medium">Coming Soon</span>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -184,10 +200,10 @@ const AnalysisSelector = () => {
                 </button>
               );
             })}
-          </div>
+          </section>
 
           {/* Trust Indicators */}
-          <div className="mt-12 grid grid-cols-3 gap-6 text-center">
+          <section className="mt-12 grid grid-cols-3 gap-6 text-center" aria-label="Statistics">
             <div className="card-soft p-4">
               <div className="text-2xl font-semibold text-foreground mb-1">10K+</div>
               <div className="text-sm text-muted-foreground">Channels Analyzed</div>
@@ -200,9 +216,14 @@ const AnalysisSelector = () => {
               <div className="text-2xl font-semibold text-foreground mb-1">Free</div>
               <div className="text-sm text-muted-foreground">Basic Insights</div>
             </div>
-          </div>
+          </section>
         </div>
       </main>
+
+      <ComingSoonModal
+        isOpen={showComingSoon}
+        onClose={() => setShowComingSoon(false)}
+      />
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Crown, ChevronDown, ChevronUp, Lock, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ComingSoonModal } from "./ComingSoonModal";
 
 interface PremiumFeature {
   title: string;
@@ -67,6 +68,16 @@ const additionalPremiumFeatures: PremiumFeature[] = [
 
 export const PremiumFeaturesSection = () => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showComingSoon, setShowComingSoon] = useState(false);
+  const [isPendingClick, setIsPendingClick] = useState(false);
+
+  const handlePremiumFeatureClick = () => {
+    setIsPendingClick(true);
+    setTimeout(() => {
+      setIsPendingClick(false);
+      setShowComingSoon(true);
+    }, 2000);
+  };
 
   return (
     <div className="mt-8 animate-fade-in" style={{ animationDelay: '600ms' }}>
@@ -119,46 +130,58 @@ export const PremiumFeaturesSection = () => {
         <div className="space-y-4">
           {/* Top Premium Features - Always Visible */}
           {topPremiumFeatures.map((feature, index) => (
-            <div 
+            <button 
               key={index}
-              className="group relative p-4 rounded-xl border border-border bg-gradient-to-br from-amber-500/5 to-yellow-500/5 hover:border-amber-500/30 transition-all"
+              onClick={handlePremiumFeatureClick}
+              disabled={isPendingClick}
+              className="w-full group relative p-4 rounded-xl border border-border bg-gradient-to-br from-amber-500/5 to-yellow-500/5 hover:border-amber-500/30 transition-all text-left cursor-pointer"
             >
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0">
-                  <Lock className="w-4 h-4 text-amber-500" />
+                  {isPendingClick ? (
+                    <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Lock className="w-4 h-4 text-amber-500" />
+                  )}
                 </div>
                 <div className="flex-1">
                   <h4 className="font-medium text-foreground mb-1">{feature.title}</h4>
                   <p className="text-sm text-muted-foreground">{feature.description}</p>
                 </div>
                 <span className="text-xs font-medium text-amber-500 bg-amber-500/10 px-2 py-1 rounded-full">
-                  PRO
+                  SOON
                 </span>
               </div>
-            </div>
+            </button>
           ))}
 
           {/* Expandable Section */}
           {isExpanded && (
             <div className="space-y-4 pt-4 border-t border-border animate-fade-in">
               {additionalPremiumFeatures.map((feature, index) => (
-                <div 
+                <button 
                   key={index}
-                  className="group relative p-4 rounded-xl border border-border bg-gradient-to-br from-amber-500/5 to-yellow-500/5 hover:border-amber-500/30 transition-all"
+                  onClick={handlePremiumFeatureClick}
+                  disabled={isPendingClick}
+                  className="w-full group relative p-4 rounded-xl border border-border bg-gradient-to-br from-amber-500/5 to-yellow-500/5 hover:border-amber-500/30 transition-all text-left cursor-pointer"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0">
-                      <Lock className="w-4 h-4 text-amber-500" />
+                      {isPendingClick ? (
+                        <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Lock className="w-4 h-4 text-amber-500" />
+                      )}
                     </div>
                     <div className="flex-1">
                       <h4 className="font-medium text-foreground mb-1">{feature.title}</h4>
                       <p className="text-sm text-muted-foreground">{feature.description}</p>
                     </div>
                     <span className="text-xs font-medium text-amber-500 bg-amber-500/10 px-2 py-1 rounded-full">
-                      PRO
+                      SOON
                     </span>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -178,13 +201,18 @@ export const PremiumFeaturesSection = () => {
               </>
             ) : (
               <>
-                Read More — Unlock All {additionalPremiumFeatures.length + topPremiumFeatures.length} Premium Features
+                Read More — See All {additionalPremiumFeatures.length + topPremiumFeatures.length} Premium Features
                 <ChevronDown className="w-4 h-4" />
               </>
             )}
           </button>
         </div>
       </div>
+
+      <ComingSoonModal
+        isOpen={showComingSoon}
+        onClose={() => setShowComingSoon(false)}
+      />
     </div>
   );
 };

@@ -5,9 +5,7 @@ import {
   X, 
   History, 
   Crown, 
-  Bell, 
   Settings, 
-  HelpCircle,
   Youtube,
   Video,
   Instagram,
@@ -16,8 +14,11 @@ import {
   FileText,
   Shield,
   Mail,
+  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ComingSoonModal } from "./ComingSoonModal";
+import { RatingModal } from "./RatingModal";
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -27,8 +28,20 @@ interface MobileMenuProps {
 
 export const MobileMenu = ({ isOpen, onClose, isPremium = false }: MobileMenuProps) => {
   const navigate = useNavigate();
+  const [showComingSoon, setShowComingSoon] = useState(false);
+  const [pendingPath, setPendingPath] = useState<string | null>(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
 
-  const handleNavigate = (path: string) => {
+  const handleNavigate = (path: string, isPremiumFeature?: boolean) => {
+    if (isPremiumFeature && !isPremium) {
+      // Show loading state for 2 seconds, then show modal
+      setPendingPath(path);
+      setTimeout(() => {
+        setPendingPath(null);
+        setShowComingSoon(true);
+      }, 2000);
+      return;
+    }
     navigate(path);
     onClose();
   };
@@ -48,7 +61,7 @@ export const MobileMenu = ({ isOpen, onClose, isPremium = false }: MobileMenuPro
       items: [
         { icon: History, label: "Analysis History", path: "/history", premium: true },
         { icon: Settings, label: "Settings", path: "/settings" },
-        { icon: Crown, label: "Upgrade to Premium", path: "/upgrade", highlight: true },
+        { icon: Crown, label: "Premium Features", path: "/upgrade", highlight: true, premium: true },
       ],
     },
     {
@@ -93,6 +106,18 @@ export const MobileMenu = ({ isOpen, onClose, isPremium = false }: MobileMenuPro
 
         {/* Menu Content */}
         <div className="p-4 space-y-6 overflow-y-auto h-[calc(100%-65px)]">
+          {/* Rate Us Button (Mobile) */}
+          <button
+            onClick={() => {
+              setShowRatingModal(true);
+              onClose();
+            }}
+            className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/30 hover:from-amber-500/20 hover:to-yellow-500/20 transition-all"
+          >
+            <Star className="w-5 h-5 text-amber-500" />
+            <span className="flex-1 text-left font-medium text-amber-600">Rate Hooklix AI</span>
+          </button>
+
           {menuItems.map((section, sectionIndex) => (
             <div key={sectionIndex}>
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
@@ -102,23 +127,30 @@ export const MobileMenu = ({ isOpen, onClose, isPremium = false }: MobileMenuPro
                 {section.items.map((item, itemIndex) => {
                   const Icon = item.icon;
                   const isLocked = item.premium && !isPremium;
+                  const isLoading = pendingPath === item.path;
 
                   return (
                     <button
                       key={itemIndex}
-                      onClick={() => handleNavigate(item.path)}
+                      onClick={() => handleNavigate(item.path, item.premium)}
+                      disabled={isLoading}
                       className={cn(
                         "w-full flex items-center gap-3 p-3 rounded-xl transition-all",
                         item.highlight 
                           ? "bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/30 text-amber-600" 
                           : "hover:bg-secondary",
-                        isLocked && "opacity-60"
+                        isLocked && "opacity-60",
+                        isLoading && "cursor-wait"
                       )}
                     >
-                      <Icon className={cn(
-                        "w-5 h-5",
-                        item.highlight ? "text-amber-500" : "text-muted-foreground"
-                      )} />
+                      {isLoading ? (
+                        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Icon className={cn(
+                          "w-5 h-5",
+                          item.highlight ? "text-amber-500" : "text-muted-foreground"
+                        )} />
+                      )}
                       <span className={cn(
                         "flex-1 text-left font-medium",
                         item.highlight ? "text-amber-600" : "text-foreground"
@@ -127,7 +159,7 @@ export const MobileMenu = ({ isOpen, onClose, isPremium = false }: MobileMenuPro
                       </span>
                       {item.premium && (
                         <span className="text-xs font-medium text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">
-                          PRO
+                          SOON
                         </span>
                       )}
                     </button>
@@ -140,11 +172,22 @@ export const MobileMenu = ({ isOpen, onClose, isPremium = false }: MobileMenuPro
           {/* Support Email */}
           <div className="pt-4 border-t border-border">
             <p className="text-xs text-muted-foreground text-center">
-              Support: <a href="mailto:creatorsAnalyticsAi@gmail.com" className="text-primary hover:underline">creatorsAnalyticsAi@gmail.com</a>
+              Support: <a href="mailto:hooklixai@gmail.com" className="text-primary hover:underline">hooklixai@gmail.com</a>
             </p>
           </div>
         </div>
       </div>
+
+      <ComingSoonModal
+        isOpen={showComingSoon}
+        onClose={() => setShowComingSoon(false)}
+      />
+
+      <RatingModal
+        isOpen={showRatingModal}
+        onClose={() => setShowRatingModal(false)}
+        pageName="/mobile-menu"
+      />
     </>
   );
 };

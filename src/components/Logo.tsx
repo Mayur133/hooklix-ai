@@ -16,7 +16,7 @@ export const Logo = ({ size = "md", showText = true }: LogoProps) => {
     <div className="flex items-center gap-3">
       <img 
         src={logoImage} 
-        alt="Creators Analytics AI" 
+        alt="Hooklix AI" 
         className={`${sizeClasses[size]} object-contain`}
       />
       {showText && (

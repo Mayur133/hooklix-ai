@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "Creators Analytics AI <onboarding@resend.dev>",
+            from: "Hooklix AI <onboarding@resend.dev>",
             to: [userEmail],
             subject: "Time to re-analyze your channel! 📊",
             html: `
@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
               <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb; padding: 40px 20px;">
                 <div style="max-width: 500px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
                   <div style="background: linear-gradient(135deg, #9333ea 0%, #ef4444 50%, #f59e0b 100%); padding: 30px; text-align: center;">
-                    <h1 style="color: white; margin: 0; font-size: 24px;">Creators Analytics AI</h1>
+                    <h1 style="color: white; margin: 0; font-size: 24px;">Hooklix AI</h1>
                   </div>
                   <div style="padding: 30px;">
                     <h2 style="color: #1f2937; margin: 0 0 16px;">It's time for a channel check-up! 🔍</h2>
@@ -143,14 +143,14 @@ Deno.serve(async (req) => {
                     <p style="color: #6b7280; line-height: 1.6; margin: 0 0 24px;">
                       Re-analyzing your channel regularly helps you track progress, spot new opportunities, and stay on top of your growth strategy.
                     </p>
-                    <a href="https://creatorsanalyticsai.lovable.app/select" style="display: inline-block; background: linear-gradient(135deg, #9333ea 0%, #ef4444 100%); color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600;">
+                    <a href="https://hooklixai.lovable.app/select" style="display: inline-block; background: linear-gradient(135deg, #9333ea 0%, #ef4444 100%); color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600;">
                       Analyze Now →
                     </a>
                   </div>
                   <div style="padding: 20px 30px; background: #f9fafb; border-top: 1px solid #e5e7eb;">
                     <p style="color: #9ca3af; font-size: 12px; margin: 0; text-align: center;">
                       You're receiving this because you enabled email notifications.<br>
-                      <a href="https://creatorsanalyticsai.lovable.app/settings" style="color: #9333ea;">Manage preferences</a>
+                      <a href="https://hooklixai.lovable.app/settings" style="color: #9333ea;">Manage preferences</a>
                     </p>
                   </div>
                 </div>
