@@ -22,10 +22,10 @@ export const Logo = ({ size = "md", showText = true }: LogoProps) => {
       {showText && (
         <div className="flex flex-col">
           <span className="font-bold text-lg bg-gradient-to-r from-purple-600 via-red-500 to-amber-500 bg-clip-text text-transparent">
-            CREATORS
+            HOOKLIX
           </span>
           <span className="text-xs font-medium text-red-500 tracking-wider">
-            ANALYTICS AI
+            AI
           </span>
         </div>
       )}
