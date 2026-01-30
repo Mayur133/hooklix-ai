@@ -21,6 +21,58 @@ interface ChannelData {
   videos: VideoData[];
 }
 
+// Allowed YouTube domains for SSRF protection
+const ALLOWED_DOMAINS = ['youtube.com', 'www.youtube.com', 'youtu.be', 'm.youtube.com'];
+
+// Validate URL domain against allowlist
+function isAllowedDomain(urlString: string): boolean {
+  try {
+    const url = new URL(urlString);
+    return ALLOWED_DOMAINS.includes(url.hostname);
+  } catch {
+    // Not a valid URL, might be a direct channel ID or handle
+    return false;
+  }
+}
+
+// Validate input before making external requests
+function validateInput(input: string): { valid: boolean; error?: string } {
+  input = input.trim();
+  
+  // Allow direct channel IDs (start with UC, 24 chars)
+  if (input.startsWith('UC') && input.length === 24) {
+    return { valid: true };
+  }
+  
+  // Allow @handles without URL
+  if (input.startsWith('@') && /^@[a-zA-Z0-9_.-]+$/.test(input)) {
+    return { valid: true };
+  }
+  
+  // For URLs, validate against allowed domains
+  if (input.includes('://') || input.includes('youtube.com') || input.includes('youtu.be')) {
+    try {
+      // Add protocol if missing for URL parsing
+      const urlToCheck = input.startsWith('http') ? input : `https://${input}`;
+      const url = new URL(urlToCheck);
+      
+      if (!ALLOWED_DOMAINS.includes(url.hostname)) {
+        return { valid: false, error: `Invalid domain. Only YouTube URLs are allowed.` };
+      }
+      return { valid: true };
+    } catch {
+      return { valid: false, error: 'Invalid URL format.' };
+    }
+  }
+  
+  // Reject anything else that looks like a URL to prevent SSRF
+  if (input.includes('.') && (input.includes('/') || input.includes(':'))) {
+    return { valid: false, error: 'Invalid input format. Please provide a YouTube URL, @handle, or channel ID.' };
+  }
+  
+  return { valid: true };
+}
+
 // Extract channel ID from various YouTube URL formats
 async function extractChannelId(input: string): Promise<string | null> {
   console.log('Extracting channel ID from:', input);
@@ -232,6 +284,16 @@ Deno.serve(async (req) => {
       console.log('No channel URL provided');
       return new Response(
         JSON.stringify({ success: false, error: 'Channel URL is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate input before processing to prevent SSRF
+    const validation = validateInput(channelUrl);
+    if (!validation.valid) {
+      console.log('Input validation failed:', validation.error);
+      return new Response(
+        JSON.stringify({ success: false, error: validation.error }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
