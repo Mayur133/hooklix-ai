@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.send-analysis-reminders]
 verify_jwt = false
+
+[functions.send-rating-notification]
+verify_jwt = false

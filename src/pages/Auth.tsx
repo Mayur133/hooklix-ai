@@ -121,7 +121,7 @@ const Auth = () => {
           <div className="card-elevated p-8">
             <div className="text-center mb-8">
               <h1 className="text-2xl font-semibold text-foreground mb-2">
-                {isLogin ? "Sign in to analyze your channel" : "Create your account"}
+                {isLogin ? "Sign in to Hooklix AI" : "Create your account"}
               </h1>
               <p className="text-muted-foreground text-sm">
                 {isLogin 

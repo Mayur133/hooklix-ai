@@ -178,10 +178,10 @@ const Settings = () => {
           <div className="mt-8 text-center text-sm text-muted-foreground">
             <p>Need help? Contact us at{" "}
               <a 
-                href="mailto:creatorsAnalyticsAi@gmail.com" 
+                href="mailto:hooklixai@gmail.com" 
                 className="text-primary hover:underline"
               >
-                creatorsAnalyticsAi@gmail.com
+                hooklixai@gmail.com
               </a>
             </p>
           </div>

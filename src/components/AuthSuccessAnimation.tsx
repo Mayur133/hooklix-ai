@@ -111,7 +111,7 @@ export const AuthSuccessAnimation = ({ onComplete }: AuthSuccessAnimationProps) 
                 >
                   <img 
                     src={logoImage} 
-                    alt="Creators Analytics AI" 
+                    alt="Hooklix AI" 
                     className="w-28 h-28 object-contain"
                   />
                 </motion.div>
@@ -127,7 +127,7 @@ export const AuthSuccessAnimation = ({ onComplete }: AuthSuccessAnimationProps) 
             >
               <h2 className="text-xl font-bold mb-1">
                 <span className="bg-gradient-to-r from-purple-600 via-red-500 to-amber-500 bg-clip-text text-transparent">
-                  CREATORS ANALYTICS AI
+                  HOOKLIX AI
                 </span>
               </h2>
               <p className="text-sm text-muted-foreground">

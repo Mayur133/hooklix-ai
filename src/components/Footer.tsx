@@ -37,10 +37,10 @@ export const Footer = () => {
           <div className="text-sm text-muted-foreground">
             Support:{" "}
             <a 
-              href="mailto:creatorsAnalyticsAi@gmail.com" 
+              href="mailto:hooklixai@gmail.com" 
               className="hover:text-primary transition-colors"
             >
-              creatorsAnalyticsAi@gmail.com
+              hooklixai@gmail.com
             </a>
           </div>
         </div>

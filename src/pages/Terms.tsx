@@ -34,7 +34,7 @@ const Terms = () => {
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">1. Acceptance of Terms</h2>
               <p className="text-muted-foreground">
-                By accessing and using Creators Analytics AI, you accept and agree to be bound by 
+                By accessing and using Hooklix AI, you accept and agree to be bound by 
                 these Terms of Service. If you do not agree to these terms, please do not use our service.
               </p>
             </section>
@@ -42,7 +42,7 @@ const Terms = () => {
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">2. Description of Service</h2>
               <p className="text-muted-foreground">
-                Creators Analytics AI provides AI-based analysis and guidance for content creators. 
+                Hooklix AI provides AI-based analysis and guidance for content creators. 
                 Our analysis is based on publicly available data and pattern recognition. We do not 
                 guarantee specific results or outcomes from using our service.
               </p>
@@ -95,10 +95,10 @@ const Terms = () => {
               <p className="text-muted-foreground">
                 For questions about these Terms, contact us at{" "}
                 <a 
-                  href="mailto:creatorsAnalyticsAi@gmail.com" 
+                  href="mailto:hooklixai@gmail.com" 
                   className="text-primary hover:underline"
                 >
-                  creatorsAnalyticsAi@gmail.com
+                  hooklixai@gmail.com
                 </a>
               </p>
             </section>

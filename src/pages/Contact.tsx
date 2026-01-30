@@ -43,10 +43,10 @@ const Contact = () => {
                     For any inquiries, feature requests, or support needs:
                   </p>
                   <a 
-                    href="mailto:creatorsAnalyticsAi@gmail.com"
+                    href="mailto:hooklixai@gmail.com"
                     className="text-lg font-medium text-primary hover:underline"
                   >
-                    creatorsAnalyticsAi@gmail.com
+                    hooklixai@gmail.com
                   </a>
                 </div>
               </div>

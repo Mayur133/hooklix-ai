@@ -80,10 +80,10 @@ const Privacy = () => {
               <p className="text-muted-foreground">
                 If you have questions about this Privacy Policy, please contact us at{" "}
                 <a 
-                  href="mailto:creatorsAnalyticsAi@gmail.com" 
+                  href="mailto:hooklixai@gmail.com" 
                   className="text-primary hover:underline"
                 >
-                  creatorsAnalyticsAi@gmail.com
+                  hooklixai@gmail.com
                 </a>
               </p>
             </section>
