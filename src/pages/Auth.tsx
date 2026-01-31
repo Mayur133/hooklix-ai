@@ -15,28 +15,49 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [showAnimation, setShowAnimation] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is already logged in
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setShowAnimation(true);
+    let isMounted = true;
+
+    // Set up auth state listener FIRST (for OAuth redirects)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (!isMounted) return;
+        
+        if (event === 'SIGNED_IN' && session) {
+          setShowAnimation(true);
+        }
+      }
+    );
+
+    // THEN check for existing session (initial load)
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!isMounted) return;
+        
+        if (session) {
+          // User already logged in, show animation and redirect
+          setShowAnimation(true);
+        }
+      } finally {
+        if (isMounted) {
+          setIsInitializing(false);
+        }
       }
     };
-    checkUser();
 
-    // Listen for auth changes (for OAuth redirects)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        setShowAnimation(true);
-      }
-    });
+    initializeAuth();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleAnimationComplete = useCallback(() => {
@@ -100,6 +121,15 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
+
+  // Show loading spinner while initializing
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (showAnimation) {
     return <AuthSuccessAnimation onComplete={handleAnimationComplete} />;
