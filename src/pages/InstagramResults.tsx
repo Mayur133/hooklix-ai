@@ -4,8 +4,6 @@ import { Navbar } from "@/components/Navbar";
 import { ResultCard } from "@/components/ResultCard";
 import { PremiumFeaturesSection } from "@/components/PremiumFeaturesSection";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { 
   ArrowLeft,
   Instagram,
@@ -21,7 +19,6 @@ import {
 const InstagramResults = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
   const [postUrl, setPostUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,15 +30,6 @@ const InstagramResults = () => {
     }
   }, [location.state, navigate]);
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Signed out",
-      description: "You have been signed out successfully.",
-    });
-    navigate("/");
-  };
-
   if (!postUrl) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -52,7 +40,7 @@ const InstagramResults = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar showUserMenu onSignOut={handleSignOut} />
+      <Navbar />
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}

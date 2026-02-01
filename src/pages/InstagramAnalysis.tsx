@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -8,7 +8,6 @@ import { AnalysisStep } from "@/components/AnalysisStep";
 import { TrustDisclaimer } from "@/components/TrustDisclaimer";
 import { useToast } from "@/hooks/use-toast";
 import { Instagram, ArrowRight, ArrowLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 const ANALYSIS_STEPS = [
   "AI Team is analyzing your content…",
@@ -23,31 +22,8 @@ const InstagramAnalysis = () => {
   const [postUrl, setPostUrl] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState(-1);
-  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
-      setUser(session.user);
-    };
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) {
-        navigate("/auth");
-      } else {
-        setUser(session.user);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
 
   const handleAnalyze = async () => {
     if (!postUrl.trim()) {
@@ -81,20 +57,6 @@ const InstagramAnalysis = () => {
 
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Save to history
-      if (user) {
-        await supabase.from("analysis_history").insert([{
-          user_id: user.id,
-          platform: "instagram" as const,
-          analysis_type: "video" as const,
-          channel_url: postUrl,
-          video_count: 1,
-          analysis_data: JSON.parse(JSON.stringify({
-            url: postUrl,
-          })),
-        }]);
-      }
-
       navigate("/instagram-results", { 
         state: { 
           postUrl,
@@ -111,18 +73,9 @@ const InstagramAnalysis = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Signed out",
-      description: "You have been signed out successfully.",
-    });
-    navigate("/");
-  };
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Navbar showUserMenu onSignOut={handleSignOut} userEmail={user?.email} />
+      <Navbar />
 
       <main className="flex-1 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {!isAnalyzing ? (

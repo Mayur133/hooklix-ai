@@ -23,17 +23,16 @@ import { RatingModal } from "./RatingModal";
 interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  isPremium?: boolean;
 }
 
-export const MobileMenu = ({ isOpen, onClose, isPremium = false }: MobileMenuProps) => {
+export const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
   const navigate = useNavigate();
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [pendingPath, setPendingPath] = useState<string | null>(null);
   const [showRatingModal, setShowRatingModal] = useState(false);
 
   const handleNavigate = (path: string, isPremiumFeature?: boolean) => {
-    if (isPremiumFeature && !isPremium) {
+    if (isPremiumFeature) {
       // Show loading state for 2 seconds, then show modal
       setPendingPath(path);
       setTimeout(() => {
@@ -57,9 +56,9 @@ export const MobileMenu = ({ isOpen, onClose, isPremium = false }: MobileMenuPro
       ],
     },
     {
-      label: "Your Account",
+      label: "More",
       items: [
-        { icon: History, label: "Analysis History", path: "/history", premium: true },
+        { icon: History, label: "Analysis History", path: "/history" },
         { icon: Settings, label: "Settings", path: "/settings" },
         { icon: Crown, label: "Premium Features", path: "/upgrade", highlight: true, premium: true },
       ],
@@ -126,7 +125,6 @@ export const MobileMenu = ({ isOpen, onClose, isPremium = false }: MobileMenuPro
               <div className="space-y-1">
                 {section.items.map((item, itemIndex) => {
                   const Icon = item.icon;
-                  const isLocked = item.premium && !isPremium;
                   const isLoading = pendingPath === item.path;
 
                   return (
@@ -139,7 +137,6 @@ export const MobileMenu = ({ isOpen, onClose, isPremium = false }: MobileMenuPro
                         item.highlight 
                           ? "bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/30 text-amber-600" 
                           : "hover:bg-secondary",
-                        isLocked && "opacity-60",
                         isLoading && "cursor-wait"
                       )}
                     >

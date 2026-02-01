@@ -4,8 +4,6 @@ import { Navbar } from "@/components/Navbar";
 import { ResultCard } from "@/components/ResultCard";
 import { PremiumFeaturesSection } from "@/components/PremiumFeaturesSection";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { 
   ArrowLeft,
   Video,
@@ -28,7 +26,6 @@ interface VideoData {
 const VideoResults = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
   const [videoData, setVideoData] = useState<VideoData | null>(null);
 
   useEffect(() => {
@@ -39,15 +36,6 @@ const VideoResults = () => {
       navigate("/video-analysis");
     }
   }, [location.state, navigate]);
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Signed out",
-      description: "You have been signed out successfully.",
-    });
-    navigate("/");
-  };
 
   if (!videoData) {
     return (
@@ -75,7 +63,7 @@ const VideoResults = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar showUserMenu onSignOut={handleSignOut} />
+      <Navbar />
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
