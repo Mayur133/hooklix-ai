@@ -1,8 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Youtube, Video, Instagram, Crown, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ComingSoonModal } from "@/components/ComingSoonModal";
@@ -54,59 +52,12 @@ const analysisOptions: AnalysisOption[] = [
 ];
 
 const AnalysisSelector = () => {
-  const [user, setUser] = useState<any>(null);
-  const [isPremium, setIsPremium] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
-      setUser(session.user);
-
-      // Check premium status
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("is_premium, premium_until")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-
-      if (profile) {
-        const isCurrentlyPremium = profile.is_premium && 
-          (!profile.premium_until || new Date(profile.premium_until) > new Date());
-        setIsPremium(isCurrentlyPremium);
-      }
-    };
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) {
-        navigate("/auth");
-      } else {
-        setUser(session.user);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Signed out",
-      description: "You have been signed out successfully.",
-    });
-    navigate("/");
-  };
 
   const handleOptionClick = (option: AnalysisOption) => {
-    if (option.isPremium && !isPremium) {
+    if (option.isPremium) {
       // Show loading state for 2 seconds, then show modal
       setPendingNavigation(option.route);
       setTimeout(() => {
@@ -120,7 +71,7 @@ const AnalysisSelector = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar showUserMenu onSignOut={handleSignOut} userEmail={user?.email} />
+      <Navbar />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="animate-fade-in">
@@ -138,7 +89,7 @@ const AnalysisSelector = () => {
           <section className="grid grid-cols-1 md:grid-cols-2 gap-6" aria-label="Analysis options">
             {analysisOptions.map((option, index) => {
               const Icon = option.icon;
-              const isLocked = option.isPremium && !isPremium;
+              const isLocked = option.isPremium;
               const isLoading = pendingNavigation === option.route;
 
               return (

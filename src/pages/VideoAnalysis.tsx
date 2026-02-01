@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -7,8 +7,7 @@ import { Input } from "@/components/ui/input";
 import { AnalysisStep } from "@/components/AnalysisStep";
 import { TrustDisclaimer } from "@/components/TrustDisclaimer";
 import { useToast } from "@/hooks/use-toast";
-import { Video, ArrowRight, ArrowLeft, Clock } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Video, ArrowRight, ArrowLeft } from "lucide-react";
 
 const ANALYSIS_STEPS = [
   "AI Team is analyzing your video…",
@@ -23,58 +22,8 @@ const VideoAnalysis = () => {
   const [videoUrl, setVideoUrl] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState(-1);
-  const [user, setUser] = useState<any>(null);
-  const [canAnalyze, setCanAnalyze] = useState(true);
-  const [nextAvailableTime, setNextAvailableTime] = useState<Date | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
-      setUser(session.user);
-      
-      // Check rate limit
-      await checkRateLimit(session.user.id);
-    };
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) {
-        navigate("/auth");
-      } else {
-        setUser(session.user);
-        checkRateLimit(session.user.id);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  const checkRateLimit = async (userId: string) => {
-    const { data: preferences } = await supabase
-      .from("user_preferences")
-      .select("last_video_analysis")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (preferences?.last_video_analysis) {
-      const lastAnalysis = new Date(preferences.last_video_analysis);
-      const nextAvailable = new Date(lastAnalysis.getTime() + 24 * 60 * 60 * 1000);
-      
-      if (new Date() < nextAvailable) {
-        setCanAnalyze(false);
-        setNextAvailableTime(nextAvailable);
-      } else {
-        setCanAnalyze(true);
-        setNextAvailableTime(null);
-      }
-    }
-  };
 
   const extractVideoId = (url: string): string | null => {
     const patterns = [
@@ -89,24 +38,7 @@ const VideoAnalysis = () => {
     return null;
   };
 
-  const formatTimeRemaining = (targetDate: Date): string => {
-    const now = new Date();
-    const diff = targetDate.getTime() - now.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}h ${minutes}m`;
-  };
-
   const handleAnalyze = async () => {
-    if (!canAnalyze) {
-      toast({
-        title: "Daily limit reached",
-        description: `You can analyze another video in ${formatTimeRemaining(nextAvailableTime!)}`,
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!videoUrl.trim()) {
       toast({
         title: "Please enter a video URL",
@@ -148,30 +80,6 @@ const VideoAnalysis = () => {
 
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Save to history and update rate limit
-      if (user) {
-        await supabase.from("analysis_history").insert([{
-          user_id: user.id,
-          platform: "youtube" as const,
-          analysis_type: "video" as const,
-          channel_name: videoData.author_name,
-          channel_url: videoData.author_url,
-          video_count: 1,
-          analysis_data: JSON.parse(JSON.stringify({
-            video_id: videoId,
-            title: videoData.title,
-            thumbnail: videoData.thumbnail_url,
-            author: videoData.author_name,
-          })),
-        }]);
-
-        // Update rate limit
-        await supabase
-          .from("user_preferences")
-          .update({ last_video_analysis: new Date().toISOString() })
-          .eq("user_id", user.id);
-      }
-
       navigate("/video-results", { 
         state: { 
           videoData: {
@@ -194,18 +102,9 @@ const VideoAnalysis = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Signed out",
-      description: "You have been signed out successfully.",
-    });
-    navigate("/");
-  };
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Navbar showUserMenu onSignOut={handleSignOut} userEmail={user?.email} />
+      <Navbar />
 
       <main className="flex-1 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {!isAnalyzing ? (
@@ -232,19 +131,6 @@ const VideoAnalysis = () => {
               </p>
             </div>
 
-            {/* Rate Limit Warning */}
-            {!canAnalyze && nextAvailableTime && (
-              <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-3">
-                <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-amber-700">Daily limit reached</p>
-                  <p className="text-sm text-amber-600">
-                    Free users can analyze 1 video per day. Next analysis available in {formatTimeRemaining(nextAvailableTime)}.
-                  </p>
-                </div>
-              </div>
-            )}
-
             {/* Input Card */}
             <div className="card-elevated p-8 mb-8">
               <label className="block text-sm font-medium text-foreground mb-3">
@@ -260,7 +146,6 @@ const VideoAnalysis = () => {
                     onChange={(e) => setVideoUrl(e.target.value)}
                     className="input-field pl-12 h-12"
                     onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
-                    disabled={!canAnalyze}
                   />
                 </div>
                 <Button 
@@ -268,7 +153,6 @@ const VideoAnalysis = () => {
                   size="lg" 
                   onClick={handleAnalyze}
                   className="gap-2 whitespace-nowrap"
-                  disabled={!canAnalyze}
                 >
                   Analyze Video
                   <ArrowRight className="w-4 h-4" />
@@ -284,7 +168,7 @@ const VideoAnalysis = () => {
 
             {/* What You'll Get */}
             <div className="card-soft p-6 mt-6">
-              <h3 className="font-semibold text-foreground mb-4">Video Performance Analyzer™ — FREE (1x per day)</h3>
+              <h3 className="font-semibold text-foreground mb-4">Video Performance Analyzer™ — FREE</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary" />

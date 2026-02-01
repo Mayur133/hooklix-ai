@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -6,8 +6,7 @@ import { Input } from "@/components/ui/input";
 import { AnalysisStep } from "@/components/AnalysisStep";
 import { useToast } from "@/hooks/use-toast";
 import { Search, ArrowRight, ArrowLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { fetchChannelData, ChannelData } from "@/lib/youtube";
+import { fetchChannelData } from "@/lib/youtube";
 
 const ANALYSIS_STEPS = [
   "AI Team is analyzing your channel…",
@@ -22,31 +21,8 @@ const Dashboard = () => {
   const [channelUrl, setChannelUrl] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState(-1);
-  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
-      setUser(session.user);
-    };
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) {
-        navigate("/auth");
-      } else {
-        setUser(session.user);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
 
   const handleAnalyze = async () => {
     if (!channelUrl.trim()) {
@@ -81,20 +57,6 @@ const Dashboard = () => {
         setCurrentStep(i + 1);
       }
 
-      // Save to history
-      if (user) {
-        await supabase.from("analysis_history").insert([{
-          user_id: user.id,
-          platform: "youtube" as const,
-          analysis_type: "channel" as const,
-          channel_name: channelData.channelName,
-          channel_url: channelData.channelUrl,
-          channel_id: channelData.channelId,
-          video_count: channelData.videos.length,
-          analysis_data: JSON.parse(JSON.stringify(channelData)),
-        }]);
-      }
-
       // Short delay before navigating
       await new Promise((resolve) => setTimeout(resolve, 500));
       
@@ -111,18 +73,9 @@ const Dashboard = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Signed out",
-      description: "You have been signed out successfully.",
-    });
-    navigate("/");
-  };
-
   return (
     <div className="min-h-screen bg-background">
-      <Navbar showUserMenu onSignOut={handleSignOut} userEmail={user?.email} />
+      <Navbar />
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {!isAnalyzing ? (

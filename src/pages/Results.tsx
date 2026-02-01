@@ -8,7 +8,6 @@ import { PremiumFeaturesSection } from "@/components/PremiumFeaturesSection";
 import { TrustDisclaimer } from "@/components/TrustDisclaimer";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { 
   ChannelData,
   analyzeUploadConsistency,
@@ -47,15 +46,6 @@ const Results = () => {
     }
   }, [location.state, navigate]);
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Signed out",
-      description: "You have been signed out successfully.",
-    });
-    navigate("/");
-  };
-
   if (!channelData) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -72,7 +62,7 @@ const Results = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Navbar showUserMenu onSignOut={handleSignOut} />
+      <Navbar />
 
       <main className="flex-1 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
